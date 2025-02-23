@@ -17,20 +17,29 @@ spec:
           image: nats-streaming:0.17.0
           args:
             [
-              '-p',
-              '4222',
-              '-m',
-              '8222',
-              '-hbi',
-              '5s',
-              '-hbt',
-              '5s',
-              '-hbf',
-              '2',
+              '-p', '4222',
+              '-m', '8222',
+              '-hbi', '5s',
+              '-hbt', '5s',
+              '-hbf', '2',
               '-SD',
-              '-cid',
-              'ticketing',
+              '-cid', 'ticketing'
             ]
+          ports:
+            - containerPort: 4222
+            - containerPort: 8222
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8222
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8222
+            initialDelaySeconds: 5
+            periodSeconds: 10
 
 ---
 apiVersion: v1
@@ -49,3 +58,4 @@ spec:
       protocol: TCP
       port: 8222
       targetPort: 8222
+  type: ClusterIP  # Change to LoadBalancer if external access is needed
