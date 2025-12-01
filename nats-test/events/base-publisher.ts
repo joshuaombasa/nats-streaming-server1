@@ -1,4 +1,4 @@
-import nats, { Message, Stan } from 'node-nats-streaming';
+import { Stan } from 'node-nats-streaming';
 import { Subjects } from './subjects';
 
 interface Event {
@@ -7,9 +7,9 @@ interface Event {
 }
 
 abstract class Publisher<T extends Event> {
-  abstract subject: T['subject'];
+  abstract readonly subject: T['subject'];
 
-  private client: Stan;
+  protected client: Stan;
 
   constructor(client: Stan) {
     this.client = client;
@@ -17,16 +17,24 @@ abstract class Publisher<T extends Event> {
 
   publish(data: T['data']): Promise<void> {
     return new Promise((resolve, reject) => {
-      this.client.publish(this.subject, JSON.stringify(data), (error) => {
+      const serializedData = JSON.stringify(data);
+
+      this.client.publish(this.subject, serializedData, (error) => {
         if (error) {
+          console.error(
+            `[Publisher Error] Failed to publish event on subject "${this.subject}":`,
+            error
+          );
           return reject(error);
         }
 
-        console.log(`Event published to subject,`, this.subject);
+        console.log(
+          `[Publisher] Event successfully published on subject "${this.subject}"`
+        );
         resolve();
       });
     });
   }
 }
 
-export { Publisher };
+export { Publisher, Event };
